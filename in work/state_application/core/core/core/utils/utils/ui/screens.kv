@@ -1,0 +1,394 @@
+#:kivy 2.0
+#:import utils kivy.utils
+
+<StarWidget>:
+    size_hint: None, None
+    size: self.star_size, self.star_size
+    canvas:
+        Color:
+            rgba: self.color
+        Ellipse:
+            pos: self.pos
+            size: self.size
+
+<BlobCreature>:
+    size_hint: None, None
+    size: 150, 150
+
+<WelcomeScreen>:
+    canvas.before:
+        Color:
+            rgba: 0.05, 0.05, 0.12, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    
+    FloatLayout:
+        # Stars background
+        id: stars_layout
+        
+        # Main content
+        BoxLayout:
+            orientation: 'vertical'
+            padding: dp(30)
+            spacing: dp(20)
+            
+            canvas.after:
+                Color:
+                    rgba: 0, 0.8, 1, 0.1
+                Ellipse:
+                    pos: self.center_x - 150, self.center_y + 50
+                    size: 300, 300
+            
+            Widget:
+                size_hint_y: 0.2
+            
+            # Welcome text
+            Label:
+                id: welcome_title
+                text: "أهلاً وسهلاً!"
+                font_name: 'ArabicFont' if 'ArabicFont' in LabelBase._fonts else 'Roboto'
+                font_size: sp(32)
+                color: 0, 0.9, 1, 1
+                bold: True
+                halign: 'center'
+                valign: 'middle'
+                text_size: self.size
+            
+            # Animated blob
+            BlobCreature:
+                id: welcome_blob
+                size_hint_x: None
+                size_hint_y: None
+                size: dp(150), dp(150)
+                pos_hint: {'center_x': 0.5}
+            
+            Label:
+                id: welcome_message
+                text: "اني companion الروحي مالتك.\\nهواي سعيد بالتعرف عليك!"
+                font_name: 'ArabicFont' if 'ArabicFont' in LabelBase._fonts else 'Roboto'
+                font_size: sp(18)
+                color: 0.7, 0.9, 1, 1
+                halign: 'center'
+                valign: 'middle'
+                text_size: self.size
+            
+            Widget:
+                size_hint_y: 0.1
+            
+            # Name input section
+            Label:
+                text: "شلون جسمك اعزك؟"
+                font_name: 'ArabicFont' if 'ArabicFont' in LabelBase._fonts else 'Roboto'
+                font_size: sp(16)
+                color: 0.8, 0.9, 1, 0.9
+                size_hint_y: None
+                height: dp(40)
+            
+            TextInput:
+                id: name_input
+                hint_text: "اكتب اسمك هون..."
+                font_name: 'ArabicFont' if 'ArabicFont' in LabelBase._fonts else 'Roboto'
+                font_size: sp(18)
+                multiline: False
+                size_hint_y: None
+                height: dp(50)
+                padding: dp(15)
+                foreground_color: 1, 1, 1, 1
+                background_color: 0.1, 0.15, 0.25, 0.8
+                cursor_color: 0, 0.9, 1, 1
+                hint_text_color: 0.5, 0.6, 0.8, 1
+                
+                canvas.after:
+                    Color:
+                        rgba: 0, 0.8, 1, 0.5
+                    Line:
+                        width: dp(2)
+                        rounded_rectangle: self.x, self.y, self.width, self.height, dp(10)
+            
+            Widget:
+                size_hint_y: 0.1
+            
+            # Continue button
+            RoundedButton:
+                id: continue_btn
+                text: "يلا نبدأ"
+                font_name: 'ArabicFont' if 'ArabicFont' in LabelBase._fonts else 'Roboto'
+                font_size: sp(18)
+                size_hint_y: None
+                height: dp(55)
+                background_color: 0, 0.7, 0.9, 1
+                on_release: root.on_continue()
+            
+            Widget:
+                size_hint_y: 0.2
+
+<MainScreen>:
+    canvas.before:
+        Color:
+            rgba: 0.05, 0.05, 0.12, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    
+    FloatLayout:
+        # Stars background container
+        id: main_stars_layout
+        
+        BoxLayout:
+            orientation: 'vertical'
+            padding: dp(15)
+            spacing: dp(10)
+            
+            # Header
+            BoxLayout:
+                size_hint_y: None
+                height: dp(50)
+                
+                Label:
+                    id: greeting_label
+                    text: "صباح الخير"
+                    font_name: 'ArabicFont' if 'ArabicFont' in LabelBase._fonts else 'Roboto'
+                    font_size: sp(22)
+                    color: 0, 0.9, 1, 1
+                    bold: True
+                    halign: 'right'
+                    valign: 'middle'
+                    text_size: self.size
+                    
+                Widget:
+                    size_hint_x: 0.5
+                    
+                IconButton:
+                    size_hint_x: None
+                    width: dp(50)
+                    icon: 'chart'
+                    on_release: root.show_stats()
+            
+            # Main interaction area
+            AnchorLayout:
+                anchor_x: 'center'
+                anchor_y: 'center'
+                
+                FloatLayout:
+                    # Glow effect behind blob
+                    canvas.after:
+                        Color:
+                            rgba: 0, 0.8, 1, 0.15
+                        Ellipse:
+                            pos: self.center_x - 100, self.center_y - 100
+                            size: 200, 200
+                    
+                    BlobCreature:
+                        id: main_blob
+                        size_hint: None, None
+                        size: dp(180), dp(180)
+                        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            
+            # Response area
+            ScrollView:
+                id: response_scroll
+                size_hint_y: 0.35
+                bar_width: dp(0)
+                
+                BoxLayout:
+                    id: response_container
+                    orientation: 'vertical'
+                    padding: dp(10)
+                    size_hint_y: None
+                    height: max(self.minimum_height, response_scroll.height)
+                    
+                    Label:
+                        id: response_label
+                        text: "اكتب الي ببالك واني اسمعك..."
+                        font_name: 'ArabicFont' if 'ArabicFont' in LabelBase._fonts else 'Roboto'
+                        font_size: sp(16)
+                        color: 0.8, 0.9, 1, 1
+                        halign: 'right'
+                        valign: 'top'
+                        text_size: self.width - dp(20), None
+                        size_hint_y: None
+                        height: self.texture_size[1]
+                        padding: dp(10)
+            
+            # Input area
+            BoxLayout:
+                size_hint_y: None
+                height: dp(60)
+                spacing: dp(10)
+                
+                RoundedButton:
+                    id: send_btn
+                    text: "ارسال"
+                    font_name: 'ArabicFont' if 'ArabicFont' in LabelBase._fonts else 'Roboto'
+                    font_size: sp(16)
+                    size_hint_x: None
+                    width: dp(80)
+                    background_color: 0, 0.7, 0.9, 1
+                    on_release: root.send_message()
+                
+                RoundedTextInput:
+                    id: message_input
+                    hint_text: "اكتب اي شي وارسل..."
+                    font_name: 'ArabicFont' if 'ArabicFont' in LabelBase._fonts else 'Roboto'
+                    font_size: sp(16)
+                    multiline: False
+                    on_text_validate: root.send_message()
+
+<StatsScreen>:
+    canvas.before:
+        Color:
+            rgba: 0.05, 0.05, 0.12, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(20)
+        spacing: dp(15)
+        
+        # Header
+        BoxLayout:
+            size_hint_y: None
+            height: dp(50)
+            
+            IconButton:
+                size_hint_x: None
+                width: dp(50)
+                icon: 'back'
+                on_release: root.go_back()
+                
+            Label:
+                text: "الاحصائيات"
+                font_name: 'ArabicFont' if 'ArabicFont' in LabelBase._fonts else 'Roboto'
+                font_size: sp(24)
+                color: 0, 0.9, 1, 1
+                bold: True
+                halign: 'center'
+                valign: 'middle'
+                text_size: self.size
+                
+            Widget:
+                size_hint_x: None
+                width: dp(50)
+        
+        # Weekly summary
+        CardWidget:
+            size_hint_y: None
+            height: dp(120)
+            
+            BoxLayout:
+                orientation: 'vertical'
+                padding: dp(15)
+                spacing: dp(10)
+                
+                Label:
+                    text: "ملخص الاسبوع"
+                    font_name: 'ArabicFont' if 'ArabicFont' in LabelBase._fonts else 'Roboto'
+                    font_size: sp(18)
+                    color: 0, 0.9, 1, 1
+                    bold: True
+                    halign: 'right'
+                    text_size: self.size
+                    
+                Label:
+                    id: weekly_summary
+                    text: "تحميل..."
+                    font_name: 'ArabicFont' if 'ArabicFont' in LabelBase._fonts else 'Roboto'
+                    font_size: sp(14)
+                    color: 0.8, 0.9, 1, 0.9
+                    halign: 'right'
+                    text_size: self.size
+        
+        # Emotion breakdown
+        Label:
+            text: "المشاعر الاكثر شيوعاً"
+            font_name: 'ArabicFont' if 'ArabicFont' in LabelBase._fonts else 'Roboto'
+            font_size: sp(18)
+            color: 0, 0.9, 1, 1
+            bold: True
+            size_hint_y: None
+            height: dp(40)
+            halign: 'right'
+            text_size: self.size
+        
+        ScrollView:
+            id: emotions_scroll
+            bar_width: dp(0)
+            
+            GridLayout:
+                id: emotions_grid
+                cols: 1
+                spacing: dp(10)
+                padding: dp(5)
+                size_hint_y: None
+                height: self.minimum_height
+        
+        Widget:
+            size_hint_y: 0.5
+
+<RoundedButton@Button>:
+    background_color: 0, 0.7, 0.9, 1
+    background_normal: ''
+    background_down: ''
+    
+    canvas.before:
+        Color:
+            rgba: self.background_color if self.state == 'normal' else (0, 0.5, 0.7, 1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(25)]
+
+<RoundedTextInput@TextInput>:
+    background_color: 0.1, 0.15, 0.25, 0.8
+    foreground_color: 1, 1, 1, 1
+    cursor_color: 0, 0.9, 1, 1
+    padding: dp(15)
+    
+    canvas.before:
+        Color:
+            rgba: self.background_color
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(25)]
+        Color:
+            rgba: 0, 0.8, 1, 0.3
+        Line:
+            width: dp(1.5)
+            rounded_rectangle: self.x, self.y, self.width, self.height, dp(25)
+
+<IconButton@Button>:
+    icon: ''
+    background_normal: ''
+    background_down: ''
+    
+    canvas.before:
+        Color:
+            rgba: 0, 0.8, 1, 0.3 if self.state == 'normal' else 0.6
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(10)]
+    
+    Label:
+        text: '📊' if self.parent.icon == 'chart' else '←'
+        font_size: sp(24)
+        color: 1, 1, 1, 1
+        center: self.parent.center
+
+<CardWidget@BoxLayout>:
+    canvas.before:
+        Color:
+            rgba: 0.1, 0.15, 0.25, 0.6
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(15)]
+        Color:
+            rgba: 0, 0.8, 1, 0.2
+        Line:
+            width: dp(1)
+            rounded_rectangle: self.x, self.y, self.width, self.height, dp(15)
