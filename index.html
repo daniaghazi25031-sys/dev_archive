@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Cognitive Atlas — Build Your Knowledge City</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0c1622;
+    --ink-2:#0f1e30;
+    --panel:#132639;
+    --panel-2:#183049;
+    --line:rgba(63,169,245,0.16);
+    --line-strong:rgba(63,169,245,0.35);
+    --cyan:#3fa9f5;
+    --cyan-dim:#2c7bb0;
+    --amber:#ffb454;
+    --parchment:#ede6d6;
+    --parchment-dim:#c9c2b2;
+    --coral:#e8604c;
+    --grass:#4c8a56;
+    --water:#2c6e8e;
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'IBM Plex Sans', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    background:var(--ink);
+    color:var(--parchment);
+    font-family:var(--font-body);
+    overflow:hidden;
+    -webkit-user-select:none; user-select:none;
+    touch-action:none;
+  }
+  button{font-family:inherit; cursor:pointer;}
+  ::selection{background:var(--amber); color:var(--ink);}
+
+  /* ---------- INTRO OVERLAY (State 0) ---------- */
+  #intro-overlay{
+    position:fixed; inset:0; z-index:100;
+    display:flex; align-items:center; justify-content:center;
+    background:
+      radial-gradient(ellipse at 50% 20%, rgba(63,169,245,0.10), transparent 60%),
+      var(--ink);
+    animation:fadeIn .6s ease;
+  }
+  #intro-overlay .grid-bg{
+    position:absolute; inset:0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:42px 42px;
+    -webkit-mask-image:radial-gradient(ellipse at 50% 40%, black 20%, transparent 75%);
+            mask-image:radial-gradient(ellipse at 50% 40%, black 20%, transparent 75%);
+  }
+  .intro-card{
+    position:relative; z-index:2;
+    max-width:640px; margin:0 24px;
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--line-strong);
+    border-radius:4px;
+    padding:56px 52px 44px;
+    box-shadow:0 30px 80px rgba(0,0,0,0.55);
+  }
+  .intro-eyebrow{
+    font-family:var(--font-mono); font-size:12px; letter-spacing:0.22em;
+    color:var(--amber); text-transform:uppercase; margin:0 0 18px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .intro-eyebrow::before{
+    content:''; width:22px; height:1px; background:var(--amber);
+  }
+  .intro-card h1{
+    font-family:var(--font-display); font-weight:600;
+    font-size:clamp(28px,4vw,40px); line-height:1.12; margin:0 0 20px;
+    color:var(--parchment); letter-spacing:-0.01em;
+  }
+  .intro-card h1 em{
+    font-style:normal; color:var(--cyan);
+  }
+  .intro-card p{
+    font-size:15.5px; line-height:1.65; color:var(--parchment-dim);
+    margin:0 0 14px;
+  }
+  .intro-card p:last-of-type{margin-bottom:34px;}
+  #skip-begin{
+    background:var(--amber); color:#26150a; border:none;
+    font-family:var(--font-mono); font-weight:500; font-size:13px;
+    letter-spacing:0.12em; text-transform:uppercase;
+    padding:14px 28px; border-radius:2px;
+    display:inline-flex; align-items:center; gap:10px;
+    transition:transform .15s ease, box-shadow .15s ease;
+    box-shadow:0 10px 24px rgba(255,180,84,0.18);
+  }
+  #skip-begin:hover{transform:translateY(-2px); box-shadow:0 14px 30px rgba(255,180,84,0.28);}
+  #skip-begin svg{width:14px; height:14px;}
+
+  /* ---------- BLUEPRINT SCREEN (State 1) ---------- */
+  #blueprint-screen{
+    position:fixed; inset:0; z-index:90;
+    display:none; align-items:center; justify-content:center; flex-direction:column;
+    background:var(--ink);
+  }
+  #blueprint-screen.visible{display:flex; animation:fadeIn .5s ease;}
+  #blueprint-screen .grid-bg{
+    position:absolute; inset:0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:42px 42px;
+  }
+  #plus-icon{
+    position:relative; z-index:2;
+    width:88px; height:88px; border-radius:50%;
+    border:1.5px solid var(--cyan-dim);
+    display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle, rgba(63,169,245,0.14), transparent 70%);
+    animation:pulse 2.2s ease-in-out infinite;
+  }
+  #plus-icon svg{width:30px; height:30px;}
+  #plus-icon:hover{border-color:var(--cyan);}
+  @keyframes pulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(63,169,245,0.35);}
+    50%{box-shadow:0 0 0 18px rgba(63,169,245,0);}
+  }
+  #blueprint-screen .caption{
+    position:relative; z-index:2; margin-top:26px;
+    font-family:var(--font-mono); font-size:13px; letter-spacing:0.2em;
+    text-transform:uppercase; color:var(--parchment-dim);
+  }
+
+  @keyframes fadeIn{from{opacity:0;} to{opacity:1;}}
+  @media (prefers-reduced-motion: reduce){
+    #plus-icon{animation:none;}
+  }
+
+  /* ---------- APP (State: Active) ---------- */
+  #app{position:fixed; inset:0; display:none;}
+  #app.visible{display:block;}
+  #world-svg{width:100%; height:100%; display:block; background:var(--ink); cursor:grab;}
+  #world-svg.panning{cursor:grabbing;}
+  #world-svg.tool-active{cursor:crosshair;}
+
+  /* HUD */
+  #hud-top{
+    position:fixed; top:18px; left:18px; z-index:20;
+    font-family:var(--font-mono); pointer-events:none;
+  }
+  #hud-top .tag{
+    display:inline-flex; align-items:center; gap:8px;
+    background:rgba(19,38,57,0.82); border:1px solid var(--line-strong);
+    padding:8px 14px; border-radius:2px; backdrop-filter:blur(6px);
+    font-size:11.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--cyan);
+  }
+  #hud-top .tag b{color:var(--amber); font-weight:500;}
+  #hud-top .sub{
+    margin-top:6px; font-size:10.5px; color:var(--parchment-dim); letter-spacing:0.06em;
+    background:rgba(19,38,57,0.6); display:inline-block; padding:5px 10px; border-radius:2px;
+  }
+
+  #zoom-controls{
+    position:fixed; top:18px; right:18px; z-index:20;
+    display:flex; flex-direction:column; gap:6px;
+  }
+  #zoom-controls button{
+    width:34px; height:34px; border-radius:2px;
+    background:rgba(19,38,57,0.82); border:1px solid var(--line-strong);
+    color:var(--parchment); font-size:16px; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+  }
+  #zoom-controls button:hover{border-color:var(--cyan); color:var(--cyan);}
+
+  /* Build Palette */
+  #palette-wrap{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
+    z-index:30; display:flex; flex-direction:column; align-items:center; gap:10px;
+  }
+  #palette{
+    display:flex; align-items:center; gap:4px;
+    background:rgba(19,38,57,0.92); border:1px solid var(--line-strong);
+    border-radius:10px; padding:6px; backdrop-filter:blur(8px);
+    box-shadow:0 18px 40px rgba(0,0,0,0.4);
+    max-width:92vw; overflow-x:auto;
+  }
+  .tool-btn{
+    width:52px; height:52px; border-radius:7px; border:1px solid transparent;
+    background:transparent; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:3px; color:var(--parchment-dim); flex:none;
+    transition:background .12s ease, color .12s ease;
+  }
+  .tool-btn svg{width:18px; height:18px;}
+  .tool-btn span{font-family:var(--font-mono); font-size:8px; letter-spacing:0.04em; text-transform:uppercase;}
+  .tool-btn:hover{background:rgba(63,169,245,0.1); color:var(--parchment);}
+  .tool-btn.active{background:var(--cyan); color:var(--ink-2);}
+  .tool-divider{width:1px; height:34px; background:var(--line-strong); margin:0 4px; flex:none;}
+
+  #draw-hint{
+    display:none; align-items:center; gap:10px;
+    background:rgba(19,38,57,0.92); border:1px solid var(--line-strong);
+    padding:8px 14px; border-radius:8px; font-size:12px; color:var(--parchment-dim);
+    font-family:var(--font-mono);
+  }
+  #draw-hint.visible{display:flex;}
+  #draw-hint button{
+    background:var(--panel-2); border:1px solid var(--line-strong); color:var(--parchment);
+    padding:5px 10px; border-radius:4px; font-size:11px; font-family:var(--font-mono);
+  }
+  #draw-hint button.primary{background:var(--amber); color:#26150a; border-color:var(--amber);}
+  #draw-hint button:hover{filter:brightness(1.1);}
+
+  /* Sheet window */
+  #sheet-window{
+    position:fixed; top:0; right:-360px; width:340px; height:100%; z-index:40;
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border-left:1px solid var(--line-strong);
+    box-shadow:-20px 0 50px rgba(0,0,0,0.4);
+    transition:right .28s cubic-bezier(.4,0,.2,1);
+    display:flex; flex-direction:column;
+    padding:22px 22px 24px;
+    overflow-y:auto;
+  }
+  #sheet-window.open{right:0;}
+  #sheet-window .sheet-eyebrow{
+    font-family:var(--font-mono); font-size:10.5px; letter-spacing:0.16em; text-transform:uppercase;
+    color:var(--cyan); margin-bottom:6px;
+  }
+  #sheet-window h2{
+    font-family:var(--font-display); font-size:20px; margin:0 0 18px; color:var(--parchment); font-weight:600;
+  }
+  #sheet-window label{
+    display:block; font-family:var(--font-mono); font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--parchment-dim); margin:16px 0 7px;
+  }
+  #sheet-window textarea{
+    width:100%; min-height:110px; resize:vertical; background:rgba(12,22,34,0.6);
+    border:1px solid var(--line-strong); border-radius:4px; color:var(--parchment);
+    font-family:var(--font-body); font-size:13.5px; padding:10px; line-height:1.5;
+  }
+  #sheet-window input[type="text"]{
+    width:100%; background:rgba(12,22,34,0.6); border:1px solid var(--line-strong); border-radius:4px;
+    color:var(--parchment); font-family:var(--font-body); font-size:13.5px; padding:10px;
+  }
+  #sheet-window input[type="color"]{
+    width:100%; height:38px; border:1px solid var(--line-strong); border-radius:4px; background:none; padding:2px;
+  }
+  #sheet-window input[type="range"]{width:100%;}
+  .sheet-row{display:flex; gap:10px;}
+  .sheet-row > div{flex:1;}
+  .sheet-actions{margin-top:auto; padding-top:22px; display:flex; flex-direction:column; gap:10px;}
+  .sheet-btn{
+    width:100%; padding:11px; border-radius:5px; border:1px solid var(--line-strong);
+    background:rgba(63,169,245,0.1); color:var(--parchment); font-size:12.5px;
+    font-family:var(--font-mono); letter-spacing:0.06em; display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .sheet-btn:hover{background:rgba(63,169,245,0.2); border-color:var(--cyan);}
+  .sheet-btn svg{width:14px; height:14px;}
+  .sheet-btn.danger{background:rgba(232,96,76,0.12); border-color:rgba(232,96,76,0.4); color:#f5a99c;}
+  .sheet-btn.danger:hover{background:rgba(232,96,76,0.22); border-color:var(--coral);}
+  #sheet-close{
+    position:absolute; top:18px; right:18px; width:26px; height:26px; border:none; background:none;
+    color:var(--parchment-dim);
+  }
+  #sheet-close:hover{color:var(--parchment);}
+
+  /* Toast */
+  #toast{
+    position:fixed; bottom:96px; left:50%; transform:translateX(-50%) translateY(10px);
+    z-index:60; background:var(--panel-2); border:1px solid var(--line-strong);
+    color:var(--parchment); padding:10px 18px; border-radius:6px; font-size:13px;
+    font-family:var(--font-mono); opacity:0; pointer-events:none; transition:all .25s ease;
+    max-width:80vw; text-align:center;
+  }
+  #toast.visible{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  /* misc svg helpers */
+  .handle{fill:var(--cyan); stroke:var(--ink); stroke-width:1; cursor:nwse-resize;}
+  .no-select{-webkit-user-select:none; user-select:none;}
+</style>
+</head>
+<body>
+
+<!-- ============ STATE 0: INTRO PORTAL ============ -->
+<div id="intro-overlay">
+  <div class="grid-bg"></div>
+  <div class="intro-card">
+    <p class="intro-eyebrow">Cognitive Atlas</p>
+    <h1>Turn what you're learning into a <em>city you can walk through.</em></h1>
+    <p>Most notes are flat. You write them once, scroll past them twice, and forget where anything lives. Cognitive Atlas gives your knowledge a place instead of a page — a navigable landscape where every idea has an address, every relationship is a road you can trace, and every subject is a skyline you built yourself.</p>
+    <p>Drop a study block for each concept and watch it become a building. Link two ideas and a road appears between them. Group a unit under a shared district of grass, cross it with a river, mark your hardest topic with a lit tower you can spot from anywhere in the city. This is a visualization matrix for everything you're trying to remember — except instead of scrolling, you navigate. Spatial memory does the work your highlighter never could.</p>
+    <button id="skip-begin">
+      Skip &amp; Begin
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ============ STATE 1: BLUEPRINT (PRE-CREATION) ============ -->
+<div id="blueprint-screen">
+  <div class="grid-bg"></div>
+  <button id="plus-icon" aria-label="Create your blueprint">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#3fa9f5" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+  <div class="caption">Create your blueprint</div>
+</div>
+
+<!-- ============ ACTIVE APP ============ -->
+<div id="app">
+  <svg id="world-svg">
+    <defs>
+      <pattern id="gridPattern" width="42" height="42" patternUnits="userSpaceOnUse">
+        <path d="M 42 0 L 0 0 0 42" fill="none" stroke="rgba(63,169,245,0.14)" stroke-width="1"/>
+      </pattern>
+      <radialGradient id="lightGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="var(--amber)" stop-opacity="0.85"/>
+        <stop offset="100%" stop-color="var(--amber)" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <g id="world">
+      <rect x="-20000" y="-20000" width="40000" height="40000" fill="url(#gridPattern)"></rect>
+      <g id="layer-ground"></g>
+      <g id="layer-roads"></g>
+      <g id="layer-links"></g>
+      <g id="layer-objects"></g>
+      <g id="layer-lights"></g>
+      <g id="layer-draft"></g>
+      <g id="layer-ui"></g>
+    </g>
+  </svg>
+
+  <div id="hud-top">
+    <div class="tag">COGNITIVE ATLAS <b>· city view</b></div>
+    <div class="sub" id="tool-hint">Select tool — drag to pan, scroll to zoom</div>
+  </div>
+
+  <div id="zoom-controls">
+    <button id="zoom-in" aria-label="Zoom in">+</button>
+    <button id="zoom-out" aria-label="Zoom out">–</button>
+    <button id="zoom-reset" aria-label="Reset view" style="font-size:11px;">⤾</button>
+  </div>
+
+  <div id="palette-wrap">
+    <div id="draw-hint">
+      <span id="draw-hint-text">Click to add points</span>
+      <button id="draw-finish" class="primary">Finish</button>
+      <button id="draw-cancel">Cancel</button>
+    </div>
+    <div id="palette"></div>
+  </div>
+
+  <div id="sheet-window">
+    <button id="sheet-close" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div id="sheet-body"></div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   STATE
+============================================================ */
+const state = {
+  objects: {},           // id -> object
+  order: [],              // z-order list of ids (for ground/roads/objects mixed handled per-layer)
+  selectedId: null,
+  tool: 'select',
+  pan: {x:0, y:0},
+  zoom: 1,
+  drag: null,             // active pointer drag info
+  drawing: null,          // {type, points:[]}
+  nextId: 1
+};
+
+function uid(prefix){ return prefix + '_' + (state.nextId++); }
+
+function toast(msg, ms){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('visible');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>el.classList.remove('visible'), ms || 2200);
+}
+
+/* ============================================================
+   INTRO / BLUEPRINT FLOW
+============================================================ */
+document.getElementById('skip-begin').addEventListener('click', ()=>{
+  document.getElementById('intro-overlay').remove();
+  document.getElementById('blueprint-screen').classList.add('visible');
+});
+
+document.getElementById('plus-icon').addEventListener('click', ()=>{
+  document.getElementById('blueprint-screen').classList.remove('visible');
+  document.getElementById('app').classList.add('visible');
+  centerView();
+  render();
+});
+
+/* ============================================================
+   TOOL DEFINITIONS
+============================================================ */
+const ICONS = {
+  select:`<path d="M6 3l14 8-6 1.5L12 20 6 3z"/>`,
+  studyBlock:`<rect x="4" y="6" width="16" height="12" rx="1"/><path d="M4 10h16"/>`,
+  link:`<circle cx="6" cy="18" r="2.4"/><circle cx="18" cy="6" r="2.4"/><path d="M8 16.2L16 7.8"/>`,
+  road:`<path d="M4 20L20 4M4 20L4 4M20 20L20 4" stroke-dasharray="0"/><path d="M11 12h2" stroke-dasharray="2 2"/>`,
+  curb:`<path d="M3 17c4-8 8-10 18-13"/>`,
+  landscape:`<path d="M3 18c2-6 5-6 6-2s3 4 5 0 4-4 7 1"/>`,
+  islandGrass:`<circle cx="12" cy="12" r="6"/><path d="M9 12c0-3 1-5 3-6M15 12c0-3-1-5-3-6"/>`,
+  water:`<path d="M3 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M3 10c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/>`,
+  tree:`<path d="M12 3l5 8h-3l4 6H6l4-6H7z"/><path d="M12 17v4"/>`,
+  boat:`<path d="M4 15h16l-2 4H6l-2-4z"/><path d="M12 15V5"/><path d="M12 6l6 5H12z"/>`
+};
+
+const TOOLS = [
+  {id:'select', label:'Select', hint:'Select tool — drag to pan, scroll to zoom, drag a block to move it'},
+  {divider:true},
+  {id:'studyBlock', label:'Block', hint:'Study Block — click the city to drop a new block'},
+  {id:'link', label:'Link', hint:'Link Logic — click one block, then another, to connect them'},
+  {divider:true},
+  {id:'road', label:'Road', hint:'Roadway — click to lay points, Finish to build the road'},
+  {id:'curb', label:'Curb', hint:'Curb — click to lay points along a road edge, Finish to build it'},
+  {divider:true},
+  {id:'landscape', label:'Grass', hint:'Landscape — click to trace a grass district, Finish to fill it in'},
+  {id:'islandGrass', label:'Island', hint:'Island Grass — click a junction to drop a rounded traffic island'},
+  {id:'water', label:'Water', hint:'Waterway — click to trace a lake, Finish to fill it in'},
+  {divider:true},
+  {id:'tree', label:'Tree', hint:'Environment — click anywhere to plant a tree'},
+  {id:'boat', label:'Boat', hint:'Boat — click inside a lake to moor a boat (lakes only)'}
+];
+
+const MULTI_POINT = {road:{min:2,closed:false}, curb:{min:2,closed:false}, landscape:{min:3,closed:true}, water:{min:3,closed:true}};
+
+function buildPalette(){
+  const wrap = document.getElementById('palette');
+  wrap.innerHTML = '';
+  TOOLS.forEach(t=>{
+    if(t.divider){
+      const d = document.createElement('div');
+      d.className = 'tool-divider';
+      wrap.appendChild(d);
+      return;
+    }
+    const btn = document.createElement('button');
+    btn.className = 'tool-btn' + (state.tool===t.id ? ' active':'');
+    btn.dataset.tool = t.id;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[t.id]}</svg><span>${t.label}</span>`;
+    btn.addEventListener('click', ()=>setTool(t.id));
+    wrap.appendChild(btn);
+  });
+}
+
+function setTool(toolId){
+  // cancel any in-progress drawing
+  cancelDrawing();
+  closeSheet();
+  state.tool = toolId;
+  document.querySelectorAll('.tool-btn').forEach(b=>b.classList.toggle('active', b.dataset.tool===toolId));
+  const def = TOOLS.find(t=>t.id===toolId);
+  document.getElementById('tool-hint').textContent = def ? def.hint : '';
+  const svg = document.getElementById('world-svg');
+  svg.classList.toggle('tool-active', toolId!=='select');
+  if(MULTI_POINT[toolId]){
+    state.drawing = {type:toolId, points:[]};
+    document.getElementById('draw-hint').classList.add('visible');
+    document.getElementById('draw-hint-text').textContent = 'Click to add points (' + MULTI_POINT[toolId].min + '+ needed)';
+  } else {
+    document.getElementById('draw-hint').classList.remove('visible');
+  }
+}
+
+function cancelDrawing(){
+  state.drawing = null;
+  document.getElementById('draw-hint').classList.remove('visible');
+  renderDraft();
+}
+
+document.getElementById('draw-cancel').addEventListener('click', ()=>{ cancelDrawing(); });
+document.getElementById('draw-finish').addEventListener('click', ()=>{ finishDrawing(); });
+
+buildPalette();
+
+/* ============================================================
+   COORDINATE HELPERS
+============================================================ */
+const svg = document.getElementById('world-svg');
+const worldG = document.getElementById('world');
+
+function applyTransform(){
+  worldG.setAttribute('transform', `translate(${state.pan.x} ${state.pan.y}) scale(${state.zoom})`);
+}
+function centerView(){
+  const r = svg.getBoundingClientRect();
+  state.pan.x = r.width/2;
+  state.pan.y = r.height/2;
+  state.zoom = 1;
+  applyTransform();
+}
+function screenToWorld(sx, sy){
+  const r = svg.getBoundingClientRect();
+  const x = sx - r.left, y = sy - r.top;
+  return { x:(x - state.pan.x)/state.zoom, y:(y - state.pan.y)/state.zoom };
+}
+function zoomAt(sx, sy, factor){
+  const r = svg.getBoundingClientRect();
+  const x = sx - r.left, y = sy - r.top;
+  const wx = (x - state.pan.x)/state.zoom;
+  const wy = (y - state.pan.y)/state.zoom;
+  state.zoom = Math.min(4, Math.max(0.18, state.zoom * factor));
+  state.pan.x = x - wx*state.zoom;
+  state.pan.y = y - wy*state.zoom;
+  applyTransform();
+}
+
+document.getElementById('zoom-in').addEventListener('click', ()=>{
+  const r = svg.getBoundingClientRect();
+  zoomAt(r.left+r.width/2, r.top+r.height/2, 1.25);
+});
+document.getElementById('zoom-out').addEventListener('click', ()=>{
+  const r = svg.getBoundingClientRect();
+  zoomAt(r.left+r.width/2, r.top+r.height/2, 0.8);
+});
+document.getElementById('zoom-reset').addEventListener('click', centerView);
+
+svg.addEventListener('wheel', (e)=>{
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.1 : 0.9;
+  zoomAt(e.clientX, e.clientY, factor);
+}, {passive:false});
+
+/* ============================================================
+   GEOMETRY HELPERS
+============================================================ */
+function pointInPolygon(pt, poly){
+  let inside = false;
+  for(let i=0, j=poly.length-1; i<poly.length; j=i++){
+    const xi=poly[i].x, yi=poly[i].y, xj=poly[j].x, yj=poly[j].y;
+    const intersect = ((yi>pt.y) !== (yj>pt.y)) && (pt.x < (xj-xi)*(pt.y-yi)/(yj-yi)+xi);
+    if(intersect) inside = !inside;
+  }
+  return inside;
+}
+
+// Catmull-Rom -> smooth closed/open path string
+function smoothPath(points, closed){
+  if(points.length < 2) return '';
+  const pts = points.slice();
+  if(pts.length === 2){
+    return `M ${pts[0].x} ${pts[0].y} L ${pts[1].x} ${pts[1].y}`;
+  }
+  const p = closed ? [pts[pts.length-1], ...pts, pts[0], pts[1]] : [pts[0], ...pts, pts[pts.length-1]];
+  let d = `M ${pts[0].x} ${pts[0].y} `;
+  for(let i=0; i<pts.length-(closed?0:1); i++){
+    const p0 = p[i], p1 = p[i+1], p2 = p[i+2], p3 = p[i+3];
+    const cp1x = p1.x + (p2.x - p0.x)/6;
+    const cp1y = p1.y + (p2.y - p0.y)/6;
+    const cp2x = p2.x - (p3.x - p1.x)/6;
+    const cp2y = p2.y - (p3.y - p1.y)/6;
+    d += `C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y} `;
+  }
+  if(closed) d += 'Z';
+  return d;
+}
+
+function seededRandom(seed){
+  let s = seed % 2147483647;
+  if (s <= 0) s += 2147483646;
+  return function(){ s = s * 16807 % 2147483647; return (s-1)/2147483646; };
+}
+
+function generateBlobPoints(cx, cy, r, seed){
+  const rand = seededRandom(seed || 1);
+  const n = 8;
+  const pts = [];
+  for(let i=0; i<n; i++){
+    const angle = (i/n) * Math.PI*2;
+    const rr = r * (0.72 + rand()*0.5);
+    pts.push({x: cx + Math.cos(angle)*rr, y: cy + Math.sin(angle)*rr});
+  }
+  return pts;
+}
+
+/* ============================================================
+   OBJECT CREATION
+============================================================ */
+function addObject(obj){
+  state.objects[obj.id] = obj;
+  render();
+  return obj;
+}
+
+function createStudyBlock(x, y){
+  const obj = {
+    id: uid('block'), type:'studyBlock',
+    x: x-70, y: y-45, w:140, h:90,
+    text:'', color:'#3fa9f5'
+  };
+  addObject(obj);
+  selectObject(obj.id);
+}
+
+function createLink(fromId, toId){
+  if(fromId === toId) return;
+  const exists = Object.values(state.objects).some(o=>o.type==='link' && ((o.fromId===fromId&&o.toId===toId)||(o.fromId===toId&&o.toId===fromId)));
+  if(exists){ toast('Already linked'); return; }
+  addObject({id:uid('link'), type:'link', fromId, toId});
+}
+
+function createPath(type, points, color){
+  addObject({id:uid(type), type, points, color});
+}
+
+function createIslandGrass(x, y){
+  const obj = {id:uid('island'), type:'islandGrass', x, y, r:34, color:'#4c8a56', seed: Math.floor(Math.random()*9999)+1};
+  addObject(obj);
+}
+
+function findLakeAt(pt){
+  return Object.values(state.objects).find(o=>o.type==='water' && pointInPolygon(pt, o.points));
+}
+
+function createBoat(x,y){
+  const pt = {x,y};
+  const lake = findLakeAt(pt);
+  if(!lake){ toast('Boats can only be moored inside a lake'); return; }
+  const obj = {id:uid('boat'), type:'boat', x, y, sail:'', sailColor:'#ede6d6', lakeId:lake.id};
+  addObject(obj);
+  selectObject(obj.id);
+}
+
+function createTree(x,y){
+  const obj = {id:uid('tree'), type:'tree', x, y};
+  addObject(obj);
+}
+
+function createLight(ownerId){
+  const owner = state.objects[ownerId];
+  if(!owner) return;
+  const anchor = ownerAnchor(owner);
+  const obj = {id:uid('light'), type:'light', x:anchor.x+38, y:anchor.y-38, r:70, color:'#ffb454', ownerId};
+  addObject(obj);
+  return obj;
+}
+function ownerAnchor(o){
+  if(o.type==='studyBlock') return {x:o.x+o.w/2, y:o.y+o.h/2};
+  return {x:o.x, y:o.y};
+}
+
+function deleteObject(id){
+  const obj = state.objects[id];
+  if(!obj) return;
+  delete state.objects[id];
+  // cascade: remove links touching this block
+  Object.values(state.objects).filter(o=>o.type==='link' && (o.fromId===id||o.toId===id)).forEach(l=>delete state.objects[l.id]);
+  // cascade: remove lights owned by this object
+  Object.values(state.objects).filter(o=>o.type==='light' && o.ownerId===id).forEach(l=>delete state.objects[l.id]);
+  if(state.selectedId===id) closeSheet();
+  render();
+}
+
+/* ============================================================
+   RENDER
+============================================================ */
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs){
+  const e = document.createElementNS(NS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+function render(){
+  const ground = document.getElementById('layer-ground');
+  const roads = document.getElementById('layer-roads');
+  const links = document.getElementById('layer-links');
+  const objects = document.getElementById('layer-objects');
+  const lights = document.getElementById('layer-lights');
+  ground.innerHTML=''; roads.innerHTML=''; links.innerHTML=''; objects.innerHTML=''; lights.innerHTML='';
+
+  const all = Object.values(state.objects);
+
+  // ground layer: landscape, islandGrass, water
+  all.filter(o=>o.type==='landscape').forEach(o=>{
+    const d = smoothPath(o.points, true);
+    const p = el('path', {d, fill:o.color, stroke:'rgba(0,0,0,0.15)', 'stroke-width':2, opacity:0.92});
+    attachSelect(p, o.id);
+    ground.appendChild(p);
+  });
+  all.filter(o=>o.type==='islandGrass').forEach(o=>{
+    const pts = generateBlobPoints(o.x, o.y, o.r, o.seed);
+    const d = smoothPath(pts, true);
+    const p = el('path', {d, fill:o.color, stroke:'rgba(0,0,0,0.15)', 'stroke-width':2, opacity:0.92});
+    attachSelect(p, o.id);
+    ground.appendChild(p);
+  });
+  all.filter(o=>o.type==='water').forEach(o=>{
+    const d = smoothPath(o.points, true);
+    const p = el('path', {d, fill:o.color, stroke:'rgba(255,255,255,0.12)', 'stroke-width':2, opacity:0.95});
+    attachSelect(p, o.id);
+    ground.appendChild(p);
+    const shine = el('path', {d, fill:'none', stroke:'rgba(255,255,255,0.10)', 'stroke-width':6, 'stroke-dasharray':'2 10', 'pointer-events':'none'});
+    ground.appendChild(shine);
+  });
+
+  // roads + curbs
+  all.filter(o=>o.type==='road').forEach(o=>{
+    const d = smoothPath(o.points, false);
+    const glow = el('path', {d, fill:'none', stroke:o.color, 'stroke-width':22, 'stroke-linecap':'round', opacity:0.25});
+    const p = el('path', {d, fill:'none', stroke:o.color, 'stroke-width':16, 'stroke-linecap':'round'});
+    const dash = el('path', {d, fill:'none', stroke:'rgba(237,230,214,0.55)', 'stroke-width':1.4, 'stroke-dasharray':'8 8', 'pointer-events':'none'});
+    roads.appendChild(glow);
+    roads.appendChild(p);
+    attachSelect(p, o.id);
+    roads.appendChild(dash);
+  });
+  all.filter(o=>o.type==='curb').forEach(o=>{
+    const d = smoothPath(o.points, false);
+    const p = el('path', {d, fill:'none', stroke:o.color, 'stroke-width':4, 'stroke-linecap':'round'});
+    attachSelect(p, o.id);
+    roads.appendChild(p);
+  });
+
+  // links
+  all.filter(o=>o.type==='link').forEach(o=>{
+    const a = state.objects[o.fromId], b = state.objects[o.toId];
+    if(!a || !b) return;
+    const p1 = ownerAnchor(a), p2 = ownerAnchor(b);
+    const line = el('line', {x1:p1.x, y1:p1.y, x2:p2.x, y2:p2.y, stroke:'#ffb454', 'stroke-width':2.4, 'stroke-dasharray':'1 8', 'stroke-linecap':'round', opacity:0.85});
+    attachSelect(line, o.id);
+    links.appendChild(line);
+  });
+
+  // study blocks, trees, boats
+  all.filter(o=>o.type==='studyBlock').forEach(o=>renderStudyBlock(objects, o));
+  all.filter(o=>o.type==='tree').forEach(o=>renderTree(objects, o));
+  all.filter(o=>o.type==='boat').forEach(o=>renderBoat(objects, o));
+
+  // lights (drawn above everything, screen-blended glow)
+  all.filter(o=>o.type==='light').forEach(o=>{
+    const g = el('g', {'data-id':o.id, style:'mix-blend-mode:screen; cursor:pointer;'});
+    const glow = el('circle', {cx:o.x, cy:o.y, r:o.r, fill:'url(#lightGlow)'});
+    glow.style.setProperty('--amber', o.color);
+    const grad = document.getElementById('lightGlow');
+    // per-light color via inline gradient clone if custom color
+    const dot = el('circle', {cx:o.x, cy:o.y, r:5, fill:o.color, stroke:'#fff', 'stroke-width':1});
+    g.appendChild(glow); g.appendChild(dot);
+    attachSelect(g, o.id);
+    lights.appendChild(g);
+  });
+
+  renderDraft();
+  renderSelectionHandles();
+}
+
+function attachSelect(node, id){
+  node.style.cursor = state.tool==='select' ? 'pointer' : 'inherit';
+  node.setAttribute('data-id', id);
+  node.addEventListener('pointerdown', (e)=>onObjectPointerDown(e, id));
+}
+
+function renderStudyBlock(layer, o){
+  const g = el('g', {'data-id':o.id});
+  const rect = el('rect', {x:o.x, y:o.y, width:o.w, height:o.h, rx:4, fill:o.color, stroke: state.selectedId===o.id ? '#ffb454' : 'rgba(12,22,34,0.6)', 'stroke-width': state.selectedId===o.id ? 2.5 : 1.5, opacity:0.94});
+  rect.style.cursor = state.tool==='select' ? 'move' : 'inherit';
+  g.appendChild(rect);
+  if(o.text){
+    const fo = el('foreignObject', {x:o.x+8, y:o.y+8, width:Math.max(o.w-16,10), height:Math.max(o.h-16,10)});
+    const div = document.createElement('div');
+    div.setAttribute('xmlns','http://www.w3.org/1999/xhtml');
+    div.style.cssText = 'font-family:IBM Plex Sans,sans-serif;font-size:12.5px;line-height:1.35;color:#0c1622;overflow:hidden;word-break:break-word;pointer-events:none;';
+    div.textContent = o.text;
+    fo.appendChild(div);
+    g.appendChild(fo);
+  }
+  attachSelect(g, o.id);
+  layer.appendChild(g);
+}
+
+function renderTree(layer, o){
+  const g = el('g', {'data-id':o.id, transform:`translate(${o.x} ${o.y})`});
+  g.style.cursor = state.tool==='select' ? 'pointer' : 'inherit';
+  const trunk = el('rect', {x:-2.5, y:6, width:5, height:10, fill:'#6b4a2f'});
+  const c1 = el('circle', {cx:0, cy:-2, r:11, fill:'#3f7a44', stroke: state.selectedId===o.id ? '#ffb454':'rgba(12,22,34,0.5)', 'stroke-width':state.selectedId===o.id?2:1});
+  const c2 = el('circle', {cx:-7, cy:4, r:8, fill:'#4c8a56'});
+  const c3 = el('circle', {cx:7, cy:4, r:8, fill:'#4c8a56'});
+  g.appendChild(trunk); g.appendChild(c2); g.appendChild(c3); g.appendChild(c1);
+  attachSelect(g, o.id);
+  layer.appendChild(g);
+}
+
+function renderBoat(layer, o){
+  const g = el('g', {'data-id':o.id, transform:`translate(${o.x} ${o.y})`});
+  g.style.cursor = state.tool==='select' ? 'pointer' : 'inherit';
+  const hull = el('path', {d:'M -16 6 L 16 6 L 11 14 L -11 14 Z', fill:'#4a3a2c', stroke: state.selectedId===o.id?'#ffb454':'rgba(12,22,34,0.5)', 'stroke-width':state.selectedId===o.id?2:1});
+  const mast = el('line', {x1:0, y1:6, x2:0, y2:-20, stroke:'#4a3a2c', 'stroke-width':2});
+  const sail = el('path', {d:'M 1 -19 L 1 4 L -13 4 Z', fill:o.sailColor||'#ede6d6', stroke:'rgba(12,22,34,0.4)', 'stroke-width':1});
+  g.appendChild(hull); g.appendChild(mast); g.appendChild(sail);
+  if(o.sail){
+    const txt = el('text', {x:0, y:24, 'text-anchor':'middle', 'font-family':'IBM Plex Mono, monospace', 'font-size':9, fill:'#ede6d6'});
+    txt.textContent = o.sail.slice(0,18);
+    g.appendChild(txt);
+  }
+  attachSelect(g, o.id);
+  layer.appendChild(g);
+}
+
+/* selection resize handles for study blocks */
+function renderSelectionHandles(){
+  const uiLayer = document.getElementById('layer-ui');
+  uiLayer.innerHTML = '';
+  if(!state.selectedId) return;
+  const o = state.objects[state.selectedId];
+  if(!o || o.type!=='studyBlock') return;
+  const corners = [
+    {id:'nw', x:o.x, y:o.y},
+    {id:'ne', x:o.x+o.w, y:o.y},
+    {id:'sw', x:o.x, y:o.y+o.h},
+    {id:'se', x:o.x+o.w, y:o.y+o.h}
+  ];
+  corners.forEach(c=>{
+    const size = 9/state.zoom;
+    const r = el('rect', {x:c.x-size/2, y:c.y-size/2, width:size, height:size, class:'handle', 'data-handle':c.id});
+    r.addEventListener('pointerdown', (e)=>{
+      e.stopPropagation();
+      state.drag = {mode:'resize', id:o.id, handle:c.id, orig:{...o}, startWorld:screenToWorld(e.clientX, e.clientY)};
+      svg.setPointerCapture(e.pointerId);
+    });
+    uiLayer.appendChild(r);
+  });
+}
+
+/* draft preview while drawing multi-point shapes */
+function renderDraft(){
+  const layer = document.getElementById('layer-draft');
+  layer.innerHTML='';
+  if(!state.drawing) return;
+  const pts = state.drawing.points;
+  pts.forEach(p=>{
+    layer.appendChild(el('circle', {cx:p.x, cy:p.y, r:4/state.zoom, fill:'#ffb454'}));
+  });
+  if(pts.length>1){
+    const d = pts.map((p,i)=> (i===0?'M':'L') + ' ' + p.x + ' ' + p.y).join(' ');
+    layer.appendChild(el('path', {d, fill:'none', stroke:'#ffb454', 'stroke-width':2/state.zoom, 'stroke-dasharray':'4 4'}));
+  }
+}
+
+/* ============================================================
+   POINTER / INTERACTION
+============================================================ */
+let linkFirstId = null;
+
+function onObjectPointerDown(e, id){
+  e.stopPropagation();
+  const obj = state.objects[id];
+  if(state.tool === 'select'){
+    selectObject(id);
+    if(obj.type==='studyBlock' || obj.type==='tree' || obj.type==='boat' || obj.type==='light'){
+      const anchor = obj.type==='studyBlock' ? {x:obj.x,y:obj.y} : {x:obj.x,y:obj.y};
+      state.drag = {mode:'move', id, startWorld:screenToWorld(e.clientX,e.clientY), origX:anchor.x, origY:anchor.y};
+      svg.setPointerCapture(e.pointerId);
+    }
+  } else if(state.tool === 'link'){
+    if(obj.type !== 'studyBlock'){ toast('Link connects Study Blocks'); return; }
+    if(!linkFirstId){
+      linkFirstId = id;
+      toast('Now click the block to connect to');
+    } else {
+      createLink(linkFirstId, id);
+      linkFirstId = null;
+    }
+  }
+}
+
+svg.addEventListener('pointerdown', (e)=>{
+  if(e.target.closest('#layer-ui')) return; // handled by handle listeners
+  const world = screenToWorld(e.clientX, e.clientY);
+
+  if(state.tool === 'select'){
+    if(e.target === svg || e.target.tagName === 'rect' && e.target.parentElement.id==='world'){
+      selectObject(null);
+      state.drag = {mode:'pan', startX:e.clientX, startY:e.clientY, origPan:{...state.pan}};
+      svg.classList.add('panning');
+      svg.setPointerCapture(e.pointerId);
+    }
+    return;
+  }
+
+  if(state.tool === 'studyBlock'){
+    setTool('select');
+    createStudyBlock(world.x, world.y);
+    return;
+  }
+  if(state.tool === 'tree'){
+    createTree(world.x, world.y);
+    return;
+  }
+  if(state.tool === 'islandGrass'){
+    createIslandGrass(world.x, world.y);
+    return;
+  }
+  if(state.tool === 'boat'){
+    createBoat(world.x, world.y);
+    return;
+  }
+  if(state.tool === 'link'){
+    // clicked empty space cancels pending link
+    linkFirstId = null;
+    return;
+  }
+  if(MULTI_POINT[state.tool]){
+    state.drawing.points.push(world);
+    renderDraft();
+    const need = MULTI_POINT[state.tool].min;
+    document.getElementById('draw-hint-text').textContent =
+      state.drawing.points.length < need
+        ? `Click to add points (${need - state.drawing.points.length} more needed)`
+        : `${state.drawing.points.length} points — click Finish when ready`;
+  }
+});
+
+svg.addEventListener('pointermove', (e)=>{
+  if(!state.drag) return;
+  if(state.drag.mode === 'pan'){
+    state.pan.x = state.drag.origPan.x + (e.clientX - state.drag.startX);
+    state.pan.y = state.drag.origPan.y + (e.clientY - state.drag.startY);
+    applyTransform();
+  } else if(state.drag.mode === 'move'){
+    const world = screenToWorld(e.clientX, e.clientY);
+    const dx = world.x - state.drag.startWorld.x;
+    const dy = world.y - state.drag.startWorld.y;
+    const obj = state.objects[state.drag.id];
+    if(!obj) return;
+    obj.x = state.drag.origX + dx;
+    obj.y = state.drag.origY + dy;
+    render();
+  } else if(state.drag.mode === 'resize'){
+    const world = screenToWorld(e.clientX, e.clientY);
+    const obj = state.objects[state.drag.id];
+    const orig = state.drag.orig;
+    const minSize = 40;
+    let {x,y,w,h} = orig;
+    const dx = world.x - state.drag.startWorld.x;
+    const dy = world.y - state.drag.startWorld.y;
+    if(state.drag.handle.includes('w')){ x = orig.x + dx; w = orig.w - dx; }
+    if(state.drag.handle.includes('e')){ w = orig.w + dx; }
+    if(state.drag.handle.includes('n')){ y = orig.y + dy; h = orig.h - dy; }
+    if(state.drag.handle.includes('s')){ h = orig.h + dy; }
+    if(w < minSize){ if(state.drag.handle.includes('w')) x = orig.x + orig.w - minSize; w = minSize; }
+    if(h < minSize){ if(state.drag.handle.includes('n')) y = orig.y + orig.h - minSize; h = minSize; }
+    obj.x=x; obj.y=y; obj.w=w; obj.h=h;
+    render();
+  }
+});
+
+function endDrag(e){
+  if(state.drag && state.drag.mode==='pan'){ svg.classList.remove('panning'); }
+  if(state.drag && e && e.pointerId!=null){
+    try{ svg.releasePointerCapture(e.pointerId); }catch(err){}
+  }
+  state.drag = null;
+}
+svg.addEventListener('pointerup', endDrag);
+svg.addEventListener('pointercancel', endDrag);
+
+// double-click finishes multi-point drawing
+svg.addEventListener('dblclick', (e)=>{
+  if(MULTI_POINT[state.tool]) finishDrawing();
+});
+
+window.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape'){ cancelDrawing(); setTool('select'); }
+  if(e.key === 'Enter' && MULTI_POINT[state.tool]) finishDrawing();
+  if((e.key === 'Delete' || e.key === 'Backspace') && state.selectedId && document.activeElement.tagName!=='TEXTAREA' && document.activeElement.tagName!=='INPUT'){
+    deleteObject(state.selectedId);
+  }
+});
+
+function finishDrawing(){
+  if(!state.drawing) return;
+  const {type, points} = state.drawing;
+  const need = MULTI_POINT[type].min;
+  if(points.length < need){ toast(`Need at least ${need} points`); return; }
+  const defaultColor = {road:'#3a3f4a', curb:'#c9c2b2', landscape:'#4c8a56', water:'#2c6e8e'}[type];
+  createPath(type, points, defaultColor);
+  cancelDrawing();
+  toast(capitalize(type) + ' created');
+}
+function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+/* Touch pinch-to-zoom */
+let pinch = null;
+svg.addEventListener('touchstart', (e)=>{
+  if(e.touches.length===2){
+    const [a,b] = e.touches;
+    pinch = {
+      dist: Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY),
+      midX: (a.clientX+b.clientX)/2, midY:(a.clientY+b.clientY)/2,
+      zoom: state.zoom
+    };
+  }
+}, {passive:true});
+svg.addEventListener('touchmove', (e)=>{
+  if(e.touches.length===2 && pinch){
+    e.preventDefault();
+    const [a,b] = e.touches;
+    const dist = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+    const factor = dist / pinch.dist;
+    state.zoom = pinch.zoom;
+    zoomAt(pinch.midX, pinch.midY, factor);
+  }
+}, {passive:false});
+svg.addEventListener('touchend', (e)=>{ if(e.touches.length<2) pinch=null; });
+
+/* ============================================================
+   SELECTION + SHEET WINDOW
+============================================================ */
+function selectObject(id){
+  state.selectedId = id;
+  render();
+  if(id) openSheet(id); else closeSheet();
+}
+
+function closeSheet(){
+  document.getElementById('sheet-window').classList.remove('open');
+  state.selectedId = null;
+}
+document.getElementById('sheet-close').addEventListener('click', ()=>{ closeSheet(); render(); });
+
+function openSheet(id){
+  const o = state.objects[id];
+  if(!o) return;
+  const body = document.getElementById('sheet-body');
+  const panel = document.getElementById('sheet-window');
+  body.innerHTML = buildSheetHTML(o);
+  panel.classList.add('open');
+  wireSheetEvents(o);
+}
+
+function sheetTypeLabel(type){
+  return {studyBlock:'Study Block', link:'Link', road:'Roadway', curb:'Curb', landscape:'Landscape', islandGrass:'Island Grass', water:'Waterway', boat:'Boat', tree:'Tree', light:'Light'}[type] || type;
+}
+
+function buildSheetHTML(o){
+  const illuminable = ['studyBlock','tree','boat'].includes(o.type);
+  let fields = '';
+  if(o.type==='studyBlock'){
+    fields = `
+      <label for="f-text">Notes</label>
+      <textarea id="f-text" placeholder="What does this block represent?">${escapeHtml(o.text||'')}</textarea>
+      <label for="f-color">Fill Color</label>
+      <input type="color" id="f-color" value="${o.color}">
+    `;
+  } else if(o.type==='boat'){
+    fields = `
+      <label for="f-sail">Sail Inscription</label>
+      <input type="text" id="f-sail" maxlength="24" placeholder="Name this vessel" value="${escapeHtml(o.sail||'')}">
+      <label for="f-sailcolor">Sail Color</label>
+      <input type="color" id="f-sailcolor" value="${o.sailColor}">
+    `;
+  } else if(o.type==='tree'){
+    fields = `<p style="color:var(--parchment-dim); font-size:13px; margin-top:8px;">A tree marks a place on the map — no notes needed here.</p>`;
+  } else if(['road','curb','landscape','water'].includes(o.type)){
+    fields = `
+      <label for="f-color">Color</label>
+      <input type="color" id="f-color" value="${o.color}">
+    `;
+  } else if(o.type==='islandGrass'){
+    fields = `
+      <label for="f-color">Color</label>
+      <input type="color" id="f-color" value="${o.color}">
+    `;
+  } else if(o.type==='light'){
+    fields = `
+      <label for="f-radius">Light Pool Radius</label>
+      <input type="range" id="f-radius" min="20" max="220" value="${o.r}">
+      <label for="f-color">Light Color</label>
+      <input type="color" id="f-color" value="${o.color}">
+    `;
+  } else if(o.type==='link'){
+    fields = `<p style="color:var(--parchment-dim); font-size:13px; margin-top:8px;">This road of logic connects two blocks. Delete it to break the connection.</p>`;
+  }
+
+  return `
+    <div class="sheet-eyebrow">${sheetTypeLabel(o.type)}</div>
+    <h2>${sheetHeading(o)}</h2>
+    ${fields}
+    <div class="sheet-actions">
+      ${illuminable ? `<button class="sheet-btn" id="btn-illuminate">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4M12 2a7 7 0 00-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0012 2z"/></svg>
+        Add Illumination
+      </button>` : ''}
+      <button class="sheet-btn danger" id="btn-delete">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"/></svg>
+        Delete
+      </button>
+    </div>
+  `;
+}
+
+function sheetHeading(o){
+  if(o.type==='studyBlock') return o.text ? truncate(o.text, 28) : 'Untitled Block';
+  if(o.type==='boat') return o.sail ? truncate(o.sail,28) : 'Unnamed Boat';
+  return sheetTypeLabel(o.type);
+}
+function truncate(s,n){ return s.length>n ? s.slice(0,n)+'…' : s; }
+function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function wireSheetEvents(o){
+  const $ = (id)=>document.getElementById(id);
+  if($('f-text')) $('f-text').addEventListener('input', (e)=>{ o.text = e.target.value; render(); refreshSheetHeading(o); });
+  if($('f-color')) $('f-color').addEventListener('input', (e)=>{ o.color = e.target.value; render(); });
+  if($('f-sail')) $('f-sail').addEventListener('input', (e)=>{ o.sail = e.target.value; render(); refreshSheetHeading(o); });
+  if($('f-sailcolor')) $('f-sailcolor').addEventListener('input', (e)=>{ o.sailColor = e.target.value; render(); });
+  if($('f-radius')) $('f-radius').addEventListener('input', (e)=>{ o.r = Number(e.target.value); render(); });
+  if($('btn-illuminate')) $('btn-illuminate').addEventListener('click', ()=>{
+    const light = createLight(o.id);
+    toast('Illumination added');
+  });
+  if($('btn-delete')) $('btn-delete').addEventListener('click', ()=>{
+    deleteObject(o.id);
+    toast(sheetTypeLabel(o.type) + ' deleted');
+  });
+}
+function refreshSheetHeading(o){
+  const h2 = document.querySelector('#sheet-body h2');
+  if(h2) h2.textContent = sheetHeading(o);
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+window.addEventListener('resize', ()=>{ /* keep current pan/zoom on resize */ });
+
+})();
+</script>
+</body>
+</html>
